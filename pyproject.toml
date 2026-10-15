@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "archivyst"
+version = "0.1.0"
+description = "Archivyst: Vectorless, reasoning-based RAG for Obsidian vaults"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13"
+authors = [
+    { name = "Karie Moorman", email = "karie@kariemoorman.com" }
+]
+keywords = ["rag", "obsidian", "llm", "llm-memory", "archivyst"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "httpx>=0.27",
+    "PyYAML>=6.0",
+    "ruamel.yaml>=0.18",
+    "rich>=13.0",
+    "pymupdf>=1.24",
+    "pdfplumber>=0.11",
+    "pytesseract>=0.3",
+    "Pillow>=10.0",
+    "argcomplete>=3.0",
+]
+
+[project.optional-dependencies]
+code = [
+    "tree-sitter>=0.23",
+    "tree-sitter-language-pack>=1.5",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "black>=25.12.0",
+    "tree-sitter>=0.23",
+    "tree-sitter-language-pack>=1.5",
+]
+
+[project.scripts]
+archivyst = "archivyst.cli.main:main"
+archive = "archivyst.cli.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/archivyst"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+markers = [
+    "integration: marks tests requiring LM Studio (deselect with '-m \"not integration\"')",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:importlib._bootstrap",
+]

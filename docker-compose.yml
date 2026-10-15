@@ -1,0 +1,52 @@
+# ---------------------------------------------------------------------------
+# Archivyst Docker Compose
+# ---------------------------------------------------------------------------
+# Usage:
+#   docker compose run archivyst init my-project
+#   docker compose run archivyst session
+#   docker compose run dev make test
+#   docker compose run dev make lint
+# ---------------------------------------------------------------------------
+
+services:
+  # Production CLI — hardened, non-root, no pip
+  archivyst:
+    build:
+      context: .
+      target: prod
+    volumes:
+      # Persist config
+      - ${ARCHIVYST_CONFIG_DIR:-~/.config/archivyst}:/home/archivyst/.config/archivyst:ro
+      # Persist vaults and memory
+      - ${ARCHIVYST_VAULTS_DIR:-~/obsidian-vaults}:/home/archivyst/obsidian-vaults
+      # Mount input directory for processing (optional)
+      - ${ARCHIVYST_INPUT_DIR:-.}:/input:ro
+    environment:
+      # LLM server URL — default assumes host machine running LM Studio
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://host.docker.internal:1234/v1}
+      # API keys (optional)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ARCHIVYST_API_KEY=${ARCHIVYST_API_KEY:-}
+    extra_hosts:
+      # Allow container to reach host machine services (LM Studio, Ollama)
+      - "host.docker.internal:host-gateway"
+    stdin_open: true
+    tty: true
+
+  # Development / CI — includes test tools
+  dev:
+    build:
+      context: .
+      target: dev
+    volumes:
+      # Mount source for live editing
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./Makefile:/app/Makefile
+    environment:
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://host.docker.internal:1234/v1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    stdin_open: true
+    tty: true

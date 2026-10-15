@@ -1,0 +1,255 @@
+# Archivyst Configuration
+# Copy to ~/.config/archivyst/config.yaml or use --config flag
+
+# Shared memory vault (used by all projects unless overridden)
+memory:
+  path: ~/obsidian-vaults/agent-memory
+  working:
+    # Number of sessions to retain before pruning
+    retention_sessions: 5
+    # Interval (minutes) for auto promotion check during session
+    promotion_interval_minutes: 30
+    # Enable auto-promotion (false = interactive, true = autonomous)
+    auto_promote: false
+    # Attempt to promote important items before deleting during prune
+    prune_before_delete: true
+  # Memory organization depth (quick or full)
+  organize_depth: quick
+
+# Default project when --project flag not specified
+default_project: personal
+
+# Project definitions
+projects:
+  # Standard project with full global access (default)
+  - name: personal
+    vaults:
+      - name: personal-notes
+        path: ~/obsidian-vaults/personal-notes
+        active: true
+    # memory: inherited from global, global: full (default)
+    # Response mode: strict (vault data only) or lax (vault + model's own knowledge)
+    response_mode: strict
+
+  # Project with read-only global access
+  - name: work
+    vaults:
+      - name: work-notes
+        path: ~/obsidian-vaults/work-notes
+        active: true
+      - name: work-reference
+        path: ~/obsidian-vaults/work-reference
+        active: true
+    memory:
+      global_access: read  # can read global entities, cannot promote
+
+  # Project isolated from global (still in shared memory vault)
+  - name: client-acme
+    vaults:
+      - name: acme-vault
+        path: ~/obsidian-vaults/acme
+        active: true
+    memory:
+      global_access: none  # no global access, project-only memory in shared memory vault
+
+  # Fully isolated project with separate memory vault
+  - name: client-confidential
+    vaults:
+      - name: confidential-vault
+        path: ~/obsidian-vaults/confidential
+        active: true
+    memory:
+      path: ~/obsidian-vaults/confidential-memory  # separate vault
+      # global_access: none implied by separate path
+
+# LLM configuration (OpenAI-compatible inference server)
+llm:
+  # API endpoint (LM Studio, Ollama, vLLM, llama.cpp, OpenAI, Anthropic, etc.)
+  base_url: http://localhost:1234/v1
+
+  # API key (optional for local servers, required for OpenAI/Anthropic)
+  # Supports ${{ENV_VAR}} syntax. Also auto-detects from environment:
+  # OPENAI_API_KEY, ANTHROPIC_API_KEY, ARCHIVYST_API_KEY
+  # api_key: ${{OPENAI_API_KEY}}
+  
+  # Model assignments per task
+  models:
+    summarization: qwen3-vl-8b-instruct
+    routing: qwen3-vl-8b-instruct
+    synthesis: qwen3-vl-8b-instruct
+    vision: qwen3-vl-8b-instruct
+    memory: qwen3-vl-8b-instruct
+  
+  # Optional: separate endpoint for VLM if running on different port
+  vision_base_url: null
+  
+  # Request timeout in seconds
+  timeout: 120
+  
+  # Max retries on transient failures
+  max_retries: 3
+
+  # Minimum seconds between requests (rate limiting)
+  min_request_interval: 0.1
+
+
+# Token allocation per operation
+# Each entry has max_tokens and temperature. Some operations have
+# additional settings specific to their function.
+token_allocation:
+  # Session — query answering and context loading
+  synthesis:
+    max_tokens: 4000
+    temperature: 0.7
+  routing:
+    max_tokens: 300
+    temperature: 0.3
+  briefing:
+    max_tokens: 50
+    temperature: 0.3
+  session_extraction:
+    max_tokens: 500
+    temperature: 0.3
+
+  # Indexing — note parsing, summarization, knowledge extraction
+  summarization:
+    max_section_tokens: 150    # per-section summary response
+    max_note_tokens: 200       # per-note summary response
+    temperature: 0.3
+    max_section_chars: 2000    # input content per section
+    max_note_chars: 3000       # input content per note
+  entity_extraction:
+    max_tokens: 500
+    temperature: 0.3
+  memory_extraction:
+    max_tokens: 500
+    temperature: 0.3
+
+  # Memory management — organize, prune, lobotomy
+  organize:
+    max_tokens: 4000
+    temperature: 0.3
+  lobotomy_scan:
+    max_tokens: 1000
+    temperature: 0.3
+
+  # Code processing — structure description during process/scan
+  code_description:
+    max_tokens: 150
+    temperature: 0.3
+  code_summary:
+    max_tokens: 150
+    temperature: 0.3
+
+  # Contradiction detection and resolution
+  contradiction_check:
+    max_tokens: 500
+    temperature: 0.3
+  contradiction_resolve:
+    max_tokens: 1000
+    temperature: 0.3
+
+  # Retrieval — context budget for synthesis input
+  retrieval:
+    max_context_chars: 8000    # max retrieved context passed to synthesis
+    max_briefing_chars: 24000  # max memory briefing size at session start
+    short_file_chars: 4000     # files under this are passed in full
+    max_query_length: 10000    # max query length in characters
+    heading_match_threshold: 0.5
+    content_match_threshold: 0.4
+
+# Indexing configuration
+indexing:
+  # incremental: only reindex changed files
+  # full: rebuild entire index
+  strategy: incremental
+  
+  # Generate LLM summaries for each section
+  summarize_sections: true
+  
+  # Wikilink resolution strategy:
+  # strict: exact filename match
+  # case_insensitive: ignore case
+  # case_insensitive_with_aliases: also check frontmatter aliases
+  wikilink_resolution: case_insensitive_with_aliases
+  
+
+  # Scan for code files in vault before indexing
+  scan_code: true
+
+  # File patterns to exclude from indexing
+  exclude_patterns:
+    - "*.excalidraw.md"
+    - ".obsidian/*"
+    - ".trash/*"
+
+# File processing / import configuration
+process:
+  # File types to convert (others are skipped)
+  supported_formats:
+    - md
+    - txt
+    - csv
+    - tsv
+    - json
+    - pdf
+    - png
+    - jpg
+    - jpeg
+    - gif
+    - webp
+    # Code files (requires archivyst[code] for non-Python languages)
+    - py
+    - c
+    - h
+    - cpp
+    - hpp
+    - java
+    - js
+    - ts
+    - go
+    - rs
+    - rb
+    - sql
+    - cs
+    - swift
+    - kt
+    - sh
+    - bash
+    - lua
+    - php
+    - r
+    - cob
+    - cbl
+  # Exclude patterns for input files
+  exclude_patterns:
+    - "*.tmp"
+    - ".DS_Store"
+    - "__MACOSX"
+  # Maximum code file size in bytes (files larger are skipped)
+  max_code_file_size: 512000  # 500KB
+
+# PDF processing
+pdf:
+  enabled: true
+  ocr_fallback: true
+  store_summaries: true
+  max_summary_chars: 8000    # max chars for PDF summary
+
+# Image processing
+images:
+  max_image_size: 50000000   # 50MB max image file size
+  vlm_descriptions: true
+  formats:
+    - png
+    - jpg
+    - jpeg
+    - gif
+    - webp
+
+# Logging
+logging:
+  level: INFO
+  file: null  # e.g., ~/.config/archivyst/archivyst.log
+  max_file_size: 5000000    # 5MB, rotate when exceeded
+  backup_count: 3           # keep 3 rotated backups
