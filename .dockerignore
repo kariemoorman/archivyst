@@ -1,0 +1,14 @@
+.git
+.gitignore
+.mypy_cache
+.ruff_cache
+.pytest_cache
+__pycache__
+*.pytest_cache*.egg-info
+dist/
+build/
+*env/
+wiki/
+*.md
+!src/**/*.md
+!config.example.yaml
