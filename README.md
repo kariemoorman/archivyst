@@ -147,22 +147,47 @@ When you ask a question:
 
 ### 3. Memory
 
-Archivyst maintains cognitive memory:
+Archivyst maintains cognitive memory at both the individual project level and the global level:
 
 ```
 agent-memory/
-├── user/                    # Preferences, profile
-├── semantic/
-│   ├── vaults/             # Meta-knowledge per vault
-│   ├── entities/           # People, projects, concepts
-│   └── facts/
-├── episodic/
-│   ├── conversations/      # Saved sessions
-│   └── events/
-├── procedural/
-│   ├── patterns/           # Learned behaviors
-│   └── corrections/
-└── working/                # Current session state
+├── <project_name>/  
+│   ├── attachments/             
+│   ├── episodic/
+│   │   ├── conversations/      # Saved sessions
+│   │   └── events/
+│   ├── procedural/
+│   │   ├── patterns/           # Learned behaviors
+│   │   ├── corrections/
+│   │   └── promotions.jsonl
+│   ├── semantic/
+│   │   ├── vaults/             # Meta-knowledge per vault
+│   │   ├── entities/           # People, projects, concepts
+│   │   ├── facts/
+│   │   └── relationships.md
+│   ├── user/                   # Preferences, profile
+│   │   ├── preferences.md
+│   │   └── profile.md
+│   └── working/                # Current session state
+│       ├── queue/
+│       ├── sessions/
+│       └── promoted.json
+└── global/  
+    ├── attachments/             
+    ├── episodic/
+    │   └── events/
+    ├── procedural/
+    │   ├── patterns/           # Learned behaviors
+    │   ├── corrections/
+    │   └── promotions.jsonl
+    ├── semantic/
+    │   ├── vaults/             # Meta-knowledge per vault
+    │   ├── entities/           # People, projects, concepts
+    │   ├── facts/
+    │   └── relationships.md
+    └── user/                   # Preferences, profile
+        ├── preferences.md
+        └── profile.md
 ```
 
 ## Python API
